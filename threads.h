@@ -10,6 +10,14 @@ void pthread_exit(void *value_ptr);
     
 pthread_t pthread_self(void);
 
+
+enum State{
+	TH_ACTIVE,
+	TH_BLOCKED,
+	TH_DEAD
+};
+
+
 // Thread Control Block
 typedef struct {
 	// Define any fields you might need inside here.
@@ -21,18 +29,14 @@ typedef struct {
 
 } TCB;
 
+
 /*
  * Circular queue implementations
  */
 //Circular linkedlist for storing the threads for execution
-typedef struct {
-	struct Node *prev;
+ struct Node{
+   struct Node *prev;
 	TCB *tcb;
-	struct Node *next;
-} Node;
+   struct Node *next;
+} *head, *tail, *current, *search;
 
-enum State {
-	TH_ACTIVE,
-	TH_BLOCKED,
-	TH_DEAD
-};

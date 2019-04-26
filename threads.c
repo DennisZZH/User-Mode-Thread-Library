@@ -1,7 +1,7 @@
 //Author: Zihao Zhang
 //Date: 4.21.2019
 
-#include <threads.h>
+#include "threads.h"
 #include <stdlib.h>
 #include <stdio.h> 
 #include <sys/time.h>
@@ -12,7 +12,6 @@
 #define MAX 128			/* max number of threads allowed*/
 #define MAIN_ID 0
 
-Node *head, *tail, *current, *search;
 static int numOfNodes = 0;		// is also the thread's id
 static pthread_t curr_thread_id = 0;
 
@@ -33,7 +32,7 @@ TCB* return_tail() {
 
 //Create empty Node for LinkedList
 void create_node() {
-	current = (Node *) malloc(sizeof(Node));
+	current = (struct Node *) malloc(sizeof(struct Node));
 	current->prev = NULL;
 	current->next = NULL;
 	current->tcb = NULL;
@@ -43,11 +42,11 @@ void create_node() {
 //Insert Node at the end of LinkedList
 void add_node(TCB* data) {
 	if (head == NULL) { //for the first Node
-		create_Node();
+		create_node();
 		head = current;
 		tail = current;
 	} else {
-		create_Node();
+		create_node();
 		tail->next = current;
 		current->prev = tail;
 		tail = current;
@@ -64,8 +63,8 @@ void delete_node(int id){
 
 //desturctor of the thread linked list
 void free_all_threads(){
-	Node *next;
-	for(Node *temp = head; temp != NULL; temp = next){
+        struct Node *next;
+	for(struct Node *temp = head; temp != NULL; temp = next){
 		next = temp->next;
 		free(temp->tcb);
 		free(temp);
@@ -134,7 +133,7 @@ static long int i64_ptr_mangle(long int p){
 
 void wrapper_function(){
 	*(search_thread(curr_thread_id)->thread_start_routine)(search_thread(curr_thread_id)->arg);
-	pthread_exit(1);
+	pthread_exit(NULL);
 }
 
 // STUB
@@ -170,7 +169,7 @@ void setup_timer_and_alarm(){
 	siga.sa_flags =  SA_NODEFER;
 
  	if (sigaction(SIGALRM, &siga, NULL) == -1) {
-    	fprintf(stderr, "ERROR: %s\n", strerror(errno));
+    	perror("Error calling sigaction()");
     	exit(1);
  	}
   
@@ -244,7 +243,6 @@ void pthread_exit(void *value_ptr){
 	}else{							// regular thread exit, change its status to TH_DEAD
 		search_thread(curr_thread_id)->thread_state = TH_DEAD;
 	}
-
 }
 
 
