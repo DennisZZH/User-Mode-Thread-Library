@@ -132,25 +132,28 @@ static long int i64_ptr_mangle(long int p){
 
 
 void wrapper_function(){
-	*(search_thread(curr_thread_id)->thread_start_routine)(search_thread(curr_thread_id)->arg);
+ 
+  printf("Inside wrapper function!!!\n");//!!!
+  
+        search_thread(curr_thread_id)->thread_start_routine(search_thread(curr_thread_id)->arg);
+
+	printf("wrapper finished running!!!\n");//!!!
 	pthread_exit(NULL);
 }
 
 // STUB
 void thread_schedule(int signo){
 
+  printf("Scheduler running! \n");//!!!
+  printf("old tid: %d \n", curr_thread_id);//!!!
+  
 	TCB *old_thread =  search_thread(curr_thread_id);
 
 	if(setjmp(old_thread->thread_buffer) == 0){
 		
 		TCB *new_thread = search_next_active_thread(curr_thread_id);
-
-		if(new_thread != NULL){			// check if there exist a active thread after current thread
-			curr_thread_id = new_thread->thread_id;
-		}else{
-			new_thread = head->tcb;
-			curr_thread_id = head->tcb->thread_id;
-		}
+		curr_thread_id = new_thread->thread_id;
+		printf("new tid: %d \n", curr_thread_id);//!!!
 
 		longjmp(new_thread->thread_buffer,1);
 
@@ -197,7 +200,9 @@ void pthread_init(){
 	
 	setjmp(main_thread->thread_buffer);
 
-	add_node(main_thread); 
+	printf("main thread created! tid: %d \n",main_thread->thread_id); //!!!
+	
+	add_node(main_thread);
 	
 	setup_timer_and_alarm();
 }
@@ -219,15 +224,29 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 	new_thread->arg = arg;
 
 	setjmp(new_thread->thread_buffer);
+	printf("now running tid = %d !!!\n", curr_thread_id);
+	//printf("SP after setjmp : %d\n", 	(new_thread->thread_buffer)[0].__jmpbuf[6] );//!!!
+	//printf("PC sftrt setjmp : %d\n",        (new_thread->thread_buffer)[0].__jmpbuf[7] );//!!!
 	
 	long int* new_sp = (long int*) malloc(32767);
 	void (*wrapper_function_ptr)() = wrapper_function;
+	
+	(new_thread->thread_buffer)[0].__jmpbuf[6] = i64_ptr_mangle((long int)new_sp);
 
-	*( (long int*) ( &(new_thread->thread_buffer) + 6 ) ) = i64_ptr_mangle((long int)new_sp);
+	(new_thread->thread_buffer)[0].__jmpbuf[7] = i64_ptr_mangle((long int)wrapper_function_ptr);
 
-	*( (long int*) ( &(new_thread->thread_buffer) + 7 ) ) = i64_ptr_mangle((long int)wrapper_function_ptr);
+	//printf("SP mangle : %d\n",         i64_ptr_mangle((long int)new_sp) );//!!!
+	//printf("PC mangle : %d\n",         i64_ptr_mangle((long int)wrapper_function_ptr) );//!!!
+	
+	//printf("SP after modification : %d\n", 	(new_thread->thread_buffer)[0].__jmpbuf[6] );//!!!
+
+	//printf("PC after modification : %d\n",  (new_thread->thread_buffer)[0].__jmpbuf[7] );//!!!
+	
 
 	*thread = new_thread->thread_id;
+
+       	printf("new thread created! tid: %d \n", *thread); //!!!
+	
 	add_node(new_thread);
 
 	return 0;	// If success
@@ -238,9 +257,11 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 void pthread_exit(void *value_ptr){
 	// Clean up the thread that exit
 	if(curr_thread_id == MAIN_ID){		// main thread exit, clean up memory, terminate the process
+	  printf("Main finished running! \n");//!!!
 		free_all_threads();
 		exit(0);
 	}else{							// regular thread exit, change its status to TH_DEAD
+	  printf("Thread finished! tid: %d \n", curr_thread_id);//!!!
 		search_thread(curr_thread_id)->thread_state = TH_DEAD;
 	}
 }

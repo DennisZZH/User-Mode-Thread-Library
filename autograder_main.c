@@ -51,6 +51,8 @@ static int test1(void){
     pthread_create(&tid2, NULL,  &_thread_dummy_loop, NULL);
 
     if(tid1 != tid2){
+      // printf("tid1: %d \n", tid1);//!!!
+      // printf("tid2: %d \n", tid2);//!!!
         return PASS;
     }else{
         return FAIL;
@@ -72,6 +74,8 @@ static int test2(void){
     pthread_create(&tid1, NULL,  &_thread_self_test, NULL);
     
     while((global_tid1 != tid1)); //failure occurs on a timeout
+    // printf("tid1: %d \n", tid1);
+    // printf("global_tid1: %d \n", global_tid1);
     return PASS;
 }
 
@@ -82,13 +86,18 @@ static int a3 = 0;
 static int b3 = 0;
 
 static void* _thread_schedule_a(void* arg){
+   printf("IN T1!!! a3 = %d \n", a3);//!!!
     while(1){
+      printf("IN T1!!! a3 = %d \n", a3);//!!!
         a3 = 1;
+	printf("IN T1!!! a3 = %d \n", a3);//!!!
     }
 
 }
 static void* _thread_schedule_b(void* arg){
+   printf("IN T2!!! a3 = %d \n", a3);//!!!
     while(1){
+      printf("IN T2!!! a3 = %d \n", a3);//!!!
         if(a3){
             b3 = 1;
         }
@@ -100,6 +109,8 @@ static int test3(void){
         
     pthread_create(&tid1, NULL,  &_thread_schedule_a, NULL);
     pthread_create(&tid2, NULL,  &_thread_schedule_b, NULL);
+
+    printf("IN T0!!! a3 = %d \n", a3);//!!!
     
     while(b3 != 1); //just wait, failure occurs if there is a timeout
     return PASS;
@@ -246,8 +257,8 @@ int main(void){
 
         //child, launches the test
         if (pid == 0){
-            dup2(devnull_fd, STDOUT_FILENO); //begone debug messages
-            dup2(devnull_fd, STDERR_FILENO);
+	  // dup2(devnull_fd, STDOUT_FILENO); //begone debug messages
+	  // dup2(devnull_fd, STDERR_FILENO);
             
             score = test_arr[i]();
             
