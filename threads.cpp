@@ -48,15 +48,16 @@ void wrapper_function(){
  
     thread_pool.front().thread_start_routine(thread_pool.front().thread_arg);
 
-    //pthread_exit(0);
+	// printf("Thread finished running! tid = %d \n", curr_thread_id);
+    pthread_exit(0);
 
 }
 
 
 void thread_schedule(int signo){
 
-  printf("Scheduler running! \n");//!!!
-  printf("old tid: %d \n", curr_thread_id);//!!!
+//   printf("Scheduler running! \n");//!!!
+//   printf("old tid: %d \n", curr_thread_id);//!!!
 
   if(thread_pool.size() <= 1){
       return;
@@ -70,7 +71,7 @@ void thread_schedule(int signo){
 
         curr_thread_id = thread_pool.front().thread_id;
 
-		printf("new tid: %d \n", curr_thread_id);//!!!
+		// printf("new tid: %d \n", curr_thread_id);//!!!
 
 		longjmp(thread_pool.front().thread_buffer,1);
 
@@ -116,12 +117,12 @@ void pthread_init(){
 	
 	setjmp(main_thread.thread_buffer);
 
-	printf("main thread created! tid: %d \n",main_thread.thread_id); //!!!
+	// printf("main thread created! tid: %d \n",main_thread.thread_id); //!!!
 	
 	thread_pool.push(main_thread);
     numOfThreads++;
 	
-    print_thread_pool(thread_pool);
+    // print_thread_pool(thread_pool);
 
 	setup_timer_and_alarm();
 }
@@ -153,12 +154,12 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
 	*thread = new_thread.thread_id;
 
-    printf("new thread created! tid: %d \n", *thread); //!!!
+    // printf("new thread created! tid: %d \n", *thread); //!!!
 	
 	thread_pool.push(new_thread);
     numOfThreads++;
 
-    print_thread_pool(thread_pool);
+    // print_thread_pool(thread_pool);
 
 	return 0;	// If success
 
@@ -174,22 +175,25 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 
 
 void pthread_exit(void *value_ptr){
-	// Clean up the thread that exit
+	
 	if(curr_thread_id == MAIN_ID){		// main thread exit, clean up memory, terminate the process
-	  printf("Main finished running! \n");//!!!
+
+	//   printf("Main finished running! \n");//!!!
 		//free_all_threads();
 		exit(0);
+
 	}else{							// regular thread exit
-	   printf("Thread finished! tid: %d \n", curr_thread_id);//!!!
-		//free((unsigned long*)thread_pool.front().thread_buffer[0].__jmpbuf[6]);
-		printf("before pop: ");
-		print_thread_pool(thread_pool);
+	//    printf("Thread finished! tid: %d \n", curr_thread_id);//!!!
+
+	// 	printf("before pop: ");
+	// 	print_thread_pool(thread_pool);
 
         thread_pool.pop();
 
-		printf("after pop: ");
-		print_thread_pool(thread_pool);
+		// printf("after pop: ");
+		// print_thread_pool(thread_pool);
 
+		curr_thread_id = thread_pool.front().thread_id;
 		longjmp(thread_pool.front().thread_buffer, 1);
         
 	}
