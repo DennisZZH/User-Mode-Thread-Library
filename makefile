@@ -1,10 +1,10 @@
 all: sample_grader
 
 sample_grader:autograder_main.c thread_lib 
-	gcc autograder_main.c threads.o -o sample_grader
+	g++ autograder_main.c threads.o -o sample_grader
 
-thread_lib:threads.c
-	gcc -c threads.c -o threads.o
+thread_lib:threads.cpp
+	g++ -c threads.cpp -o threads.o
 
 clean:
 	rm threads.o

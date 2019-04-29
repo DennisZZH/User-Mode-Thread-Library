@@ -25,18 +25,8 @@ typedef struct {
 	enum State thread_state;
 	jmp_buf thread_buffer;
 	void *(*thread_start_routine)(void*);		// a pointer to the start_routine function
-	void* arg;
+	void* thread_arg;
 
 } TCB;
 
-
-/*
- * Circular queue implementations
- */
-//Circular linkedlist for storing the threads for execution
- struct Node{
-   struct Node *prev;
-	TCB *tcb;
-   struct Node *next;
-} *head, *tail, *current, *search;
 
