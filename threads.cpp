@@ -114,6 +114,7 @@ void pthread_init(){
 
 	main_thread.thread_start_routine = NULL;
 	main_thread.thread_arg = NULL;
+	main_thread.thread_free = NULL;
 	
 	setjmp(main_thread.thread_buffer);
 
@@ -146,6 +147,8 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 	setjmp(new_thread.thread_buffer);
 	
 	unsigned long *new_sp = (unsigned long*) malloc(32767);
+	new_thread.thread_free = new_sp;
+
 	void (*wrapper_function_ptr)() = &wrapper_function;
 	
 	new_thread.thread_buffer[0].__jmpbuf[6] = i64_ptr_mangle((unsigned long)(new_sp + 32767 / 8 - 2));
@@ -166,12 +169,17 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_
 }
 
 
-// void free_all_threads(){
-//     while(thread_pool.empty() == false){
-//         free((unsigned long*) thread_pool.front().thread_buffer[0].__jmpbuf[6]);
-//         thread_pool.pop();
-//     }
-// }
+ void free_all_threads(){
+     while(thread_pool.empty() == false){
+
+		 if(thread_pool.front().thread_id == MAIN_ID){
+			 thread_pool.pop();
+		 }else{
+			free( thread_pool.front().thread_free);
+			thread_pool.pop();
+		 }
+     }
+ }
 
 
 void pthread_exit(void *value_ptr){
@@ -179,19 +187,16 @@ void pthread_exit(void *value_ptr){
 	if(curr_thread_id == MAIN_ID){		// main thread exit, clean up memory, terminate the process
 
 	//   printf("Main finished running! \n");//!!!
-		//free_all_threads();
+
+		free_all_threads();
 		exit(0);
 
-	}else{							// regular thread exit
+	}else{								// regular thread exit
+
 	//    printf("Thread finished! tid: %d \n", curr_thread_id);//!!!
 
-	// 	printf("before pop: ");
-	// 	print_thread_pool(thread_pool);
-
+		free(thread_pool.front().thread_free);
         thread_pool.pop();
-
-		// printf("after pop: ");
-		// print_thread_pool(thread_pool);
 
 		curr_thread_id = thread_pool.front().thread_id;
 		longjmp(thread_pool.front().thread_buffer, 1);

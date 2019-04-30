@@ -21,11 +21,12 @@ enum State{
 // Thread Control Block
 typedef struct {
 	// Define any fields you might need inside here.
-	pthread_t thread_id;
+	int thread_id;
 	enum State thread_state;
 	jmp_buf thread_buffer;
 	void *(*thread_start_routine)(void*);		// a pointer to the start_routine function
 	void* thread_arg;
+	unsigned long* thread_free;
 
 } TCB;
 
